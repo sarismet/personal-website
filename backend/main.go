@@ -23,7 +23,7 @@ type Paper struct {
 	Score      string             `json:"score,omitempty" bson:"score,omitempty"`
 }
 
-var databaseUrl string = "mongodb+srv://golangbey:rP2TdFBj@cluster0.mdopc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+var databaseUrl string = ""
 
 func main() {
 	fmt.Println("Hello world")
