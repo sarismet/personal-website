@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
+var myclient *mongo.Client
 
 type Paper struct {
 	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -24,13 +24,13 @@ type Paper struct {
 	Score      string             `json:"score,omitempty" bson:"score,omitempty"`
 }
 
-var databaseUrl string = ""
+var databaseUrl string = "mongodb+srv://golangbey:rP2TdFBj@cluster0.mdopc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 func CreatePaper(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var paper Paper
 	_ = json.NewDecoder(request.Body).Decode(&paper)
-	collection := client.Database("Blog").Collection("papers")
+	collection := myclient.Database("Blog").Collection("papers")
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	result, _ := collection.InsertOne(ctx, paper)
 	json.NewEncoder(response).Encode(result)
@@ -48,6 +48,9 @@ func main() {
 	if client != nil {
 		fmt.Println("Hello Database")
 	}
+
+	myclient = client
+
 	router := mux.NewRouter()
 	router.HandleFunc("/papers/add", CreatePaper).Methods("POST")
 	http.ListenAndServe(":8000", router)
