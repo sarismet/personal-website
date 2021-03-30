@@ -17,10 +17,6 @@ import (
 	gomail "gopkg.in/gomail.v2"
 )
 
-const myEmail string = ""
-const mailTo string = ""
-const password string = ""
-
 type MessageInfo struct {
 	FirstName string `json:"firstName,omitempty" bson:"firstname,text"`
 	LastName  string `json:"lastName,omitempty" bson:"lastName,text"`
@@ -46,12 +42,12 @@ func (mi *MessageInfo) sendMail() {
 
 	result := tpl.String()
 	m := gomail.NewMessage()
-	m.SetHeader("From", myEmail)
-	m.SetHeader("To", mailTo)
+	m.SetHeader("From", MyEmail)
+	m.SetHeader("To", MailTo)
 	m.SetHeader("Subject", "golang test")
 	m.SetBody("text/html", result)
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, myEmail, password)
+	d := gomail.NewDialer("smtp.gmail.com", 587, MyEmail, Password)
 
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
@@ -85,7 +81,6 @@ func sendEmail(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var messageInfo MessageInfo
 	_ = json.NewDecoder(request.Body).Decode(&messageInfo)
-	println("messageInfo  firstName : ", messageInfo.FirstName)
 	messageInfo.sendMail()
 }
 
