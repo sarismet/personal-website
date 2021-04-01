@@ -44,12 +44,24 @@ func (mi *MessageInfo) sendMail() {
 	m := gomail.NewMessage()
 	m.SetHeader("From", MyEmail)
 	m.SetHeader("To", MailTo)
-	m.SetHeader("Subject", "golang test")
+	m.SetHeader("Subject", "Contact")
 	m.SetBody("text/html", result)
 
 	d := gomail.NewDialer("smtp.gmail.com", 587, MyEmail, Password)
 
-	// Send the email to Bob, Cora and Dan.
+	if err := d.DialAndSend(m); err != nil {
+		panic(err)
+	}
+}
+
+func notification() {
+	m := gomail.NewMessage()
+	m.SetHeader("From", MyEmail)
+	m.SetHeader("To", MailTo)
+	m.SetHeader("Subject", "Notification")
+	m.SetBody("text", "Someone has seen your resume")
+	d := gomail.NewDialer("smtp.gmail.com", 587, MyEmail, Password)
+
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
 	}
@@ -77,6 +89,12 @@ func CreatePaper(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(result)
 }
 
+func Notify(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("content-type", "application/json")
+	notification()
+	json.NewEncoder(response).Encode("Notification is sent")
+}
+
 func sendEmail(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var messageInfo MessageInfo
@@ -102,6 +120,8 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/papers/add", CreatePaper).Methods("POST")
 	router.HandleFunc("/papers/sendEmail", sendEmail).Methods("POST")
+	router.HandleFunc("/papers/notify", Notify).Methods("POST")
+
 	http.ListenAndServe(":8000", router)
 
 }
