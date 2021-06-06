@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"net/smtp"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,46 +26,32 @@ type MessageInfo struct {
 }
 
 //REFERENCE: https://gist.github.com/ivanmrchk/e30eb45808536159bbec9aac20058b78
-func (mi *MessageInfo) sendMail() {
+func (mi *MessageInfo) sendMail(_body string, _subject string) {
 
-	t := template.New("email-template.html")
-
-	var err error
-	t, err = t.ParseFiles("email-template.html")
+	from := MyEmail //ex: "John.Doe@gmail.com"
+	password := Password   // ex: "ieiemcjdkejspqz"
+	// receiver address
+	toEmail := MailTo // ex: "Jane.Smith@yahoo.com"
+	to := []string{toEmail}
+	// smtp - Simple Mail Transfer Protocol
+	host := "smtp.gmail.com"
+	port := "587"
+	address := host + ":" + port
+	// message
+	subject := _subject
+	body := _body
+	message := []byte(subject + body)
+	// athentication data
+	// func PlainAuth(identity, username, password, host string) Auth
+	auth := smtp.PlainAuth("", from, password, host)
+	// send mail
+	// func SendMail(addr string, a Auth, from string, to []string, msg []byte) error
+	err := smtp.SendMail(address, auth, from, to, message)
 	if err != nil {
-		log.Println(err)
+		fmt.Println("err:", err)
+		return
 	}
-
-	var tpl bytes.Buffer
-	if err := t.Execute(&tpl, mi); err != nil {
-		log.Println(err)
-	}
-
-	result := tpl.String()
-	m := gomail.NewMessage()
-	m.SetHeader("From", MyEmail)
-	m.SetHeader("To", MailTo)
-	m.SetHeader("Subject", "Contact")
-	m.SetBody("text/html", result)
-
-	d := gomail.NewDialer("smtp.gmail.com", 587, MyEmail, Password)
-
-	if err := d.DialAndSend(m); err != nil {
-		panic(err)
-	}
-}
-
-func notification() {
-	m := gomail.NewMessage()
-	m.SetHeader("From", MyEmail)
-	m.SetHeader("To", MailTo)
-	m.SetHeader("Subject", "Notification")
-	m.SetBody("text", "Someone has seen your resume")
-	d := gomail.NewDialer("smtp.gmail.com", 587, MyEmail, Password)
-
-	if err := d.DialAndSend(m); err != nil {
-		panic(err)
-	}
+		
 }
 
 var myclient *mongo.Client
@@ -90,15 +77,17 @@ func CreatePaper(response http.ResponseWriter, request *http.Request) {
 
 func Notify(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
-	notification()
+	var messageInfo MessageInfo
+	messageInfo.sendMail("somebody has viewed your resume","notification")
 	json.NewEncoder(response).Encode("Notification is sent")
 }
 
 func sendEmail(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
-	var messageInfo MessageInfo
+	var mi MessageInfo
 	_ = json.NewDecoder(request.Body).Decode(&messageInfo)
-	messageInfo.sendMail()
+	_body := "Hi my name is "+mi.FirstName+" "+mi.LastName+"and my message is \n"+mi.Message+"\n My connection email address is : "+mi.Email
+	messageInfo.sendMail(_body,"Someone has sent you email")
 }
 
 func main() {
