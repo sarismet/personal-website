@@ -77,8 +77,7 @@ type Paper struct {
 	Score      string             `json:"score,omitempty" bson:"score,omitempty"`
 }
 
-var databaseUrl string = "mongodb+srv://golangbey:rP2TdFBj@cluster0.mdopc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
-
+var databaseUrl string 
 func CreatePaper(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var paper Paper
